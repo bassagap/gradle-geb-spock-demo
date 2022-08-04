@@ -41,6 +41,7 @@ hs_err_pid*
 .idea/dictionaries
 .idea/vcs.xml
 .idea/jsLibraryMappings.xml
+.idea/azure
 
 # Sensitive or high-churn files:
 .idea/dataSources.ids
