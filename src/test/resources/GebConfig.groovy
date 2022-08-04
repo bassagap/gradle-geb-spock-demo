@@ -1,12 +1,15 @@
 
 import com.aoe.gebspockreports.GebReportingListener
+import com.gargoylesoftware.htmlunit.BrowserVersion
+import com.gargoylesoftware.htmlunit.WebClient
 import io.github.bonigarcia.wdm.WebDriverManager
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.edge.EdgeDriver;
-import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.edge.EdgeOptions
+import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.logging.LogType
 import org.openqa.selenium.logging.LoggingPreferences
 
@@ -59,7 +62,7 @@ environments {
             chromeOptions.addArguments("--no-sandbox")
             chromeOptions.addArguments("--dns-prefetch-disable")
             chromeOptions.addArguments("--disable-gpu")
-
+            chromeOptions.setHeadless(true)
 
             LoggingPreferences logPrefs = new LoggingPreferences();
             logPrefs.enable( LogType.PERFORMANCE, Level.ALL );
@@ -96,5 +99,3 @@ waiting {
         }
     }
 }
-
-
