@@ -1,0 +1,112 @@
+plugins {
+    id 'java'
+    id 'groovy'
+    id "base"
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+ext {
+    junitVersion = "5.7.1"
+    junitPlatformVersion = "1.7.1"
+    spockVersion = "2.2-M1-groovy-3.0"
+    gebVersion = "5.1"
+    seleniumVersion = "4.3.0"
+    htmlunitVersion = "2.40.0"
+    unirestVersion = "3.11.13"
+    iosDriverVersion = "0.6.5"
+    groovyVersion = "3.0.8"
+    javaxMailVersion = "1.6.2"
+    webdrivermanagerVersion = "5.1.0"
+    spockReportsVersion = "2.0-RC2"
+    gebSpockReportsVersion = "0.3.0-RC1"
+    ApacheLoggingVersion = "2.14.0"
+    // When a test fail we can continue or fail the stage
+    CONTINUE_WHEN_TEST_FAIL = true
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+    testCompile "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+    testCompile "org.junit.platform:junit-platform-launcher:${junitPlatformVersion}"
+    testCompile "org.junit.platform:junit-platform-runner:${junitPlatformVersion}"
+    testCompile "org.spockframework:spock-core:${spockVersion}"
+    testCompile "com.konghq:unirest-java:${unirestVersion}"
+    testCompile "org.gebish:geb-spock:${gebVersion}"
+    testCompile "org.seleniumhq.selenium:selenium-chrome-driver:${seleniumVersion}"
+    testCompile "org.seleniumhq.selenium:selenium-edge-driver:${seleniumVersion}"
+    testCompile "org.seleniumhq.selenium:htmlunit-driver:${htmlunitVersion}"
+    testRuntime "org.seleniumhq.selenium:selenium-support:${seleniumVersion}"
+    testCompile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    testCompile "org.gebish:geb-junit4:${gebVersion}"
+    testCompile "org.gebish:geb-junit5:${gebVersion}"
+    testCompile "io.github.bonigarcia:webdrivermanager:${webdrivermanagerVersion}"
+    testCompile "org.spockframework:spock-junit4:${spockVersion}"
+    testCompile "com.aoe:geb-spock-reports:${gebSpockReportsVersion}"
+    testCompile ("com.athaydes:spock-reports:${spockReportsVersion}") { transitive = false }
+    testCompile "org.apache.logging.log4j:log4j-api:${ApacheLoggingVersion}"
+    testCompile "org.apache.logging.log4j:log4j-core:${ApacheLoggingVersion}"
+}
+sourceSets {
+    acceptance {
+        groovy {
+            srcDir 'src/test/acceptance/groovy'
+        }
+        resources {
+            srcDir 'src/test/resources'
+        }
+        compileClasspath += sourceSets.main.output + sourceSets.test.output + configurations.testRuntime
+        runtimeClasspath += sourceSets.main.output + sourceSets.test.output + configurations.testRuntime
+    }
+}
+
+configurations {
+
+    acceptanceCompile.extendsFrom testCompile
+    acceptanceRuntime.extendsFrom testRuntime
+}
+
+class TestExecutionPhases {
+    static final String ACCEPTANCE = "acceptance"
+}
+
+class TestLanguages {
+    static final String GROOVY = "groovy"
+}
+
+def TestEnv = ['dev', 'test', 'localChrome','localEdge']
+
+def generateTaskName(def type, def language, def env) {
+    return "${type}-${language}-${env}"
+}
+
+// Task to create in a parametrized way Tests task
+def executeTest(def type, def language, def env) {
+    return tasks.create(generateTaskName(type, language, env), Test) {
+        description = "Runs ${type} tests ${language}."
+        group = "verification"
+        testClassesDirs = sourceSets["${type}"].output.classesDirs
+        classpath = sourceSets["${type}"].runtimeClasspath
+        ignoreFailures = "${CONTINUE_WHEN_TEST_FAIL}"
+        systemProperty "geb.env", env
+
+
+    }
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    jvmArgs '--enable-preview'
+    maxParallelForks = 2
+}
+test {
+    // To create the tasks
+    for( env in TestEnv){
+        dependsOn executeTest(TestExecutionPhases.ACCEPTANCE, TestLanguages.GROOVY, env)
+    }
+
+}
